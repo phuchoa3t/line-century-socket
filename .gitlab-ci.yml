@@ -1,0 +1,349 @@
+---
+# Gitlab CI configuration file
+
+#variables:
+#  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+image: docker.mobgame.mobi/mobgame-research/alpine-bash
+
+cache:
+  key: "$CI_COMMIT_REF_NAME"
+  untracked: true
+  paths:
+    - vendor
+
+stages:
+  - build
+  - deploy
+    
+
+#
+# Build development
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+#
+predeploy_dev:
+  environment: development
+  stage: build
+  only: 
+    - dev
+  tags:
+    - docker
+    - development
+    - php7
+  script:
+    - export DEPLOY_HOST_DEV=($DEPLOY_HOST_DEV)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_DEV=${DEPLOY_HOST_DEV[0]}
+    - if [[ -z "$DEPLOY_HOST_DEV" || -z "$PROJECT_LOCATION_DEV" || -z "$DEPLOY_PORT_DEV" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.predeploy.sh "$DEPLOY_HOST_DEV" "$DEPLOY_PORT_DEV" "$PROJECT_LOCATION_DEV"
+  when: on_success
+
+# 
+# DEPLOY development
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+# 
+deploy_dev:
+  environment: development
+  stage: deploy
+  only: 
+    - dev
+  tags:
+    - docker
+    - development
+    - php7
+  script:
+    - export DEPLOY_HOST_DEV=($DEPLOY_HOST_DEV)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_DEV=${DEPLOY_HOST_DEV[0]}
+    - if [[ -z "$DEPLOY_HOST_DEV" || -z "$PROJECT_LOCATION_DEV" || -z "$DEPLOY_PORT_DEV" || -z "$PM2_NAME_DEV" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.deploy.sh "$DEPLOY_HOST_DEV" "$DEPLOY_PORT_DEV" "$PROJECT_LOCATION_DEV"  "$PM2_NAME_DEV"
+  when: on_success
+  
+###################################STAGING ENV##############################################################
+#
+# Build staging
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+#
+predeploy_staging:
+  environment: staging
+  stage: build
+  only: 
+    - staging
+  tags:
+    - docker
+    - staging
+    - php7
+  script:
+    - export DEPLOY_HOST_STG=($DEPLOY_HOST_STG)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_STG=${DEPLOY_HOST_STG[0]}
+    - if [[ -z "$DEPLOY_HOST_STG" || -z "$PROJECT_LOCATION_STG" || -z "$DEPLOY_PORT_STG" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.predeploy.sh "$DEPLOY_HOST_STG" "$DEPLOY_PORT_STG" "$PROJECT_LOCATION_STG"
+  when: on_success
+
+
+# 
+# DEPLOY staging
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+# 
+deploy_staging:
+  environment: staging
+  stage: deploy
+  only: 
+    - staging
+  tags:
+    - docker
+    - staging
+    - php7
+  script:
+    - export DEPLOY_HOST_STG=($DEPLOY_HOST_STG)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_STG=${DEPLOY_HOST_STG[0]}
+    - if [[ -z "$DEPLOY_HOST_STG" || -z "$PROJECT_LOCATION_STG" || -z "$DEPLOY_PORT_STG" || -z "$PM2_NAME_STG" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.deploy.sh "$DEPLOY_HOST_STG" "$DEPLOY_PORT_STG" "$PROJECT_LOCATION_STG" "$PM2_NAME_STG"
+  when: on_success
+
+
+  
+###################################PRODUCTION ENV##############################################################
+#
+# Build production
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+#
+predeploy_prod_0:
+  environment: production
+  stage: build
+  only: 
+    - master
+  tags:
+    - docker
+    - production
+    - nodejs
+  script:
+    - export DEPLOY_HOST_PROD=($DEPLOY_HOST_PROD)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_PROD=${DEPLOY_HOST_PROD[0]}
+    - if [[ -z "$DEPLOY_HOST_PROD" || -z "$PROJECT_LOCATION_PROD" || -z "$DEPLOY_PORT_PROD" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.predeploy.sh "$DEPLOY_HOST_PROD" "$DEPLOY_PORT_PROD" "$PROJECT_LOCATION_PROD"
+  when: on_success
+
+predeploy_prod_1:
+  environment: production
+  stage: build
+  only:
+    - master
+  tags:
+    - docker
+    - production 
+    - nodejs
+  script:
+    - export DEPLOY_HOST_PROD=($DEPLOY_HOST_PROD)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_PROD=${DEPLOY_HOST_PROD[1]}
+    - if [[ -z "$DEPLOY_HOST_PROD" || -z "$PROJECT_LOCATION_PROD" || -z "$DEPLOY_PORT_PROD" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.predeploy.sh "$DEPLOY_HOST_PROD" "$DEPLOY_PORT_PROD" "$PROJECT_LOCATION_PROD"
+  when: on_success
+
+# 
+# DEPLOY production
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+# 
+deploy_prod_0:
+  environment: production
+  stage: deploy
+  only: 
+    - master
+  tags:
+    - docker
+    - production
+    - nodejs
+  script:
+    - export DEPLOY_HOST_PROD=($DEPLOY_HOST_PROD)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_PROD=${DEPLOY_HOST_PROD[0]}
+    - if [[ -z "$DEPLOY_HOST_PROD" || -z "$PROJECT_LOCATION_PROD" || -z "$DEPLOY_PORT_PROD" || -z "$PM2_NAME_PROD" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.deploy.sh "$DEPLOY_HOST_PROD" "$DEPLOY_PORT_PROD" "$PROJECT_LOCATION_PROD" "$PM2_NAME_PROD"
+  when: manual
+
+deploy_prod_1:
+  environment: production
+  stage: deploy
+  only:
+    - master
+  tags:
+    - docker
+    - production
+    - nodejs
+  script:
+    - export DEPLOY_HOST_PROD=($DEPLOY_HOST_PROD)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_PROD=${DEPLOY_HOST_PROD[1]}
+    - if [[ -z "$DEPLOY_HOST_PROD" || -z "$PROJECT_LOCATION_PROD" || -z "$DEPLOY_PORT_PROD" || -z "$PM2_NAME_PROD" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.deploy.sh "$DEPLOY_HOST_PROD" "$DEPLOY_PORT_PROD" "$PROJECT_LOCATION_PROD" "$PM2_NAME_PROD"
+  when: manual
+
+
+#################################CI-CD MIBOON################################
+
+
+#
+# Build development
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+#
+predeploy_dev_miboon:
+  environment: development
+  stage: build
+  only: 
+    - miboon_develop
+  tags:
+    - docker
+    - development
+    - php7
+  script:
+    - export DEPLOY_HOST_DEV=($DEPLOY_HOST_DEV)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_DEV=${DEPLOY_HOST_DEV[0]}
+    - if [[ -z "$DEPLOY_HOST_DEV" || -z "$PROJECT_LOCATION_DEV_MIBOON" || -z "$DEPLOY_PORT_DEV" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.predeploy.sh "$DEPLOY_HOST_DEV" "$DEPLOY_PORT_DEV" "$PROJECT_LOCATION_DEV_MIBOON"
+  when: on_success
+
+# 
+# DEPLOY development
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+# 
+deploy_dev_miboon:
+  environment: development
+  stage: deploy
+  only: 
+    - miboon_develop
+  tags:
+    - docker
+    - development
+    - php7
+  script:
+    - export DEPLOY_HOST_DEV=($DEPLOY_HOST_DEV)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_DEV=${DEPLOY_HOST_DEV[0]}
+    - if [[ -z "$DEPLOY_HOST_DEV" || -z "$PROJECT_LOCATION_DEV_MIBOON" || -z "$DEPLOY_PORT_DEV" || -z "$PM2_NAME_DEV_MIBOON" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.deploy.sh "$DEPLOY_HOST_DEV" "$DEPLOY_PORT_DEV" "$PROJECT_LOCATION_DEV_MIBOON"  "$PM2_NAME_DEV_MIBOON"
+  when: on_success
+  
+###################################STAGING ENV##############################################################
+#
+# Build staging
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+#
+predeploy_staging_miboon:
+  environment: staging
+  stage: build
+  only: 
+    - miboon_staging
+  tags:
+    - docker
+    - staging
+    - php7
+  script:
+    - export DEPLOY_HOST_STG=($DEPLOY_HOST_STG)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_STG=${DEPLOY_HOST_STG[0]}
+    - if [[ -z "$DEPLOY_HOST_STG" || -z "$PROJECT_LOCATION_STG_MIBOON" || -z "$DEPLOY_PORT_STG" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.predeploy.sh "$DEPLOY_HOST_STG" "$DEPLOY_PORT_STG" "$PROJECT_LOCATION_STG_MIBOON"
+  when: on_success
+
+
+# 
+# DEPLOY staging
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+# 
+deploy_staging_miboon:
+  environment: staging
+  stage: deploy
+  only: 
+    - miboon_staging
+  tags:
+    - docker
+    - staging
+    - php7
+  script:
+    - export DEPLOY_HOST_STG=($DEPLOY_HOST_STG)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_STG=${DEPLOY_HOST_STG[0]}
+    - if [[ -z "$DEPLOY_HOST_STG" || -z "$PROJECT_LOCATION_STG_MIBOON" || -z "$DEPLOY_PORT_STG" || -z "$PM2_NAME_STG_MIBOON" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.deploy.sh "$DEPLOY_HOST_STG" "$DEPLOY_PORT_STG" "$PROJECT_LOCATION_STG_MIBOON" "$PM2_NAME_STG_MIBOON"
+  when: on_success
+  
+###################################PRODUCTION ENV##############################################################
+#
+# Build production
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+#
+predeploy_prod_0_miboon:
+  environment: production
+  stage: build
+  only: 
+    - miboon_master
+  tags:
+    - docker
+    - production
+    - nodejs
+  script:
+    - export DEPLOY_HOST_PROD=($DEPLOY_HOST_PROD)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_PROD=${DEPLOY_HOST_PROD[0]}
+    - if [[ -z "$DEPLOY_HOST_PROD" || -z "$PROJECT_LOCATION_PROD_MIBOON" || -z "$DEPLOY_PORT_PROD" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.predeploy.sh "$DEPLOY_HOST_PROD" "$DEPLOY_PORT_PROD" "$PROJECT_LOCATION_PROD_MIBOON"
+  when: on_success
+
+predeploy_prod_1_miboon:
+  environment: production
+  stage: build
+  only:
+    - miboon_master
+  tags:
+    - docker
+    - production 
+    - nodejs
+  script:
+    - export DEPLOY_HOST_PROD=($DEPLOY_HOST_PROD)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_PROD=${DEPLOY_HOST_PROD[1]}
+    - if [[ -z "$DEPLOY_HOST_PROD" || -z "$PROJECT_LOCATION_PROD_MIBOON" || -z "$DEPLOY_PORT_PROD" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.predeploy.sh "$DEPLOY_HOST_PROD" "$DEPLOY_PORT_PROD" "$PROJECT_LOCATION_PROD_MIBOON"
+  when: on_success
+
+# 
+# DEPLOY production
+# If you use multiple host, just copy this job to new job, replace the index 0 with your new index, or sv name
+# 
+deploy_prod_0_miboon:
+  environment: production
+  stage: deploy
+  only: 
+    - miboon_master
+  tags:
+    - docker
+    - production
+    - nodejs
+  script:
+    - export DEPLOY_HOST_PROD=($DEPLOY_HOST_PROD)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_PROD=${DEPLOY_HOST_PROD[0]}
+    - if [[ -z "$DEPLOY_HOST_PROD" || -z "$PROJECT_LOCATION_PROD_MIBOON" || -z "$DEPLOY_PORT_PROD" || -z "$PM2_NAME_PROD_MIBOON" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.deploy.sh "$DEPLOY_HOST_PROD" "$DEPLOY_PORT_PROD" "$PROJECT_LOCATION_PROD_MIBOON" "$PM2_NAME_PROD_MIBOON"
+  when: manual
+
+deploy_prod_1_miboon:
+  environment: production
+  stage: deploy
+  only:
+    - miboon_master
+  tags:
+    - docker
+    - production
+    - nodejs
+  script:
+    - export DEPLOY_HOST_PROD=($DEPLOY_HOST_PROD)
+    # Check if environment variable has been set
+    - DEPLOY_HOST_PROD=${DEPLOY_HOST_PROD[1]}
+    - if [[ -z "$DEPLOY_HOST_PROD" || -z "$PROJECT_LOCATION_PROD_MIBOON" || -z "$DEPLOY_PORT_PROD" || -z "$PM2_NAME_PROD_MIBOON" ]]; then echo "Need to set variables"; exit 1; fi
+    - bash ci-cd/runner/runner.deploy.sh "$DEPLOY_HOST_PROD" "$DEPLOY_PORT_PROD" "$PROJECT_LOCATION_PROD_MIBOON" "$PM2_NAME_PROD_MIBOON"
+  when: manual
